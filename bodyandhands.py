@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 
 # Do we want to show only the skeleton ?
-show_camera = False
+show_camera = True
 
 # Body
 mp_pose = mp.solutions.pose
@@ -14,33 +14,52 @@ mp_hands = mp.solutions.hands
 drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
+# Variables
+color_landmarks_hands = (0, 0, 255)
+thickness_landmarks_hands = 3
+circle_radius_landmarks_hands = 3
+
+color_landmarks_body = (255, 0, 0)
+thickness_landmarks_body = 3
+circle_radius_landmarks_body = 3
+
+color_connection_hands = (255, 255, 255)
+thickness_connection_hands = 3
+
+color_connection_body = (0, 255, 0)
+thickness_connection_body = 3
+
+color_custom_connection_hands = (0, 255, 255)
+color_custom_connection_two_hands = (0, 255, 255)
+color_custom_connection_body = (255, 0, 255)
+
 # Custom Landmark Styles
 custom_landmark_style_hands = drawing.DrawingSpec(
-    color=(0, 0, 255),
-    thickness=3,
-    circle_radius=3
+    color=color_landmarks_hands,
+    thickness=thickness_landmarks_hands,
+    circle_radius=circle_radius_landmarks_hands
 )
 custom_landmark_style_body = drawing.DrawingSpec(
-    color=(255, 0, 0),
-    thickness=3,
-    circle_radius=3
+    color=color_landmarks_body,
+    thickness=thickness_landmarks_body,
+    circle_radius=circle_radius_landmarks_body
 )
 
 # Custom Connection Styles
 custom_connection_style_hands = drawing.DrawingSpec(
-    color=(255, 255, 255),
-    thickness=3
+    color=color_connection_hands,
+    thickness=thickness_connection_hands
 )
 custom_connection_style_body = drawing.DrawingSpec(
-    color=(0, 255, 0),
-    thickness=3
+    color=color_connection_body,
+    thickness=thickness_connection_body
 )
 
 # Custom links
 
 # Hands
-def draw_custom_links_hands(hand_landmarks, canvas, color=(0, 255, 255), thickness=2):
-    h, w, _ = canvas.shape
+def draw_custom_links_hands(hand_landmarks, image, color=color_custom_connection_hands, thickness=thickness_connection_hands):
+    h, w, _ = image.shape
 
     def point(id):
         lm = hand_landmarks.landmark[id]
@@ -53,14 +72,14 @@ def draw_custom_links_hands(hand_landmarks, canvas, color=(0, 255, 255), thickne
     ]
 
     for a, b in connections:
-        cv.line(canvas, point(a), point(b), color, thickness)
+        cv.line(image, point(a), point(b), color, thickness)
 
     # Optional: highlight joints (nodes)
     for i in range(21):
-        cv.circle(canvas, point(i), 3, (0, 0, 255), -1)
+        cv.circle(image, point(i), 3, (0, 0, 255), -1)
 
 # Body
-def draw_custom_links_body(landmarks, image):
+def draw_custom_links_body(landmarks, image, color=color_custom_connection_body, thickness=thickness_connection_body):
     h, w, _ = image.shape
 
     def point(id):
@@ -74,7 +93,23 @@ def draw_custom_links_body(landmarks, image):
     ]
 
     for a, b in connections:
-        cv.line(image, point(a), point(b), (255, 0, 255), 2)
+        cv.line(image, point(a), point(b), color, thickness)
+
+# Two hands
+def draw_hand_to_hand_connection(hand1, hand2, image, color=color_custom_connection_two_hands, thickness=thickness_connection_hands):
+    h, w, _ = image.shape
+
+    def point(hand, idx):
+        lm = hand.landmark[idx]
+        return int(lm.x * w), int(lm.y * h)
+
+    connections = [
+        # Custom Links
+        (8, 12),
+    ]
+
+    for a, b in connections:
+        cv.line(image, point(hand1, a), point(hand2, b), color, thickness)
 
 def bodyandhands():
     # Body
@@ -111,15 +146,17 @@ def bodyandhands():
             print("Camera frame not available")
             break
 
+        # Invert the frame to mirror
+        frame = cv.flip(frame, 1)
+
         # Convert the frame from BGR to RGB (required by MediaPipe)
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
         body_detected = pose.process(rgb_frame)
         hands_detected = hands.process(rgb_frame)
 
-        # Create the black image only if we don't want to see the camera
-        if not show_camera:
-            canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
+        # Create the black image if we don't want to see the camera
+        canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
 
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
@@ -140,7 +177,10 @@ def bodyandhands():
                     connection_drawing_spec=custom_connection_style_body
                 )
 
-            draw_custom_links_body(body_detected.pose_landmarks, canvas)
+            if show_camera:
+                draw_custom_links_body(body_detected.pose_landmarks, frame)
+            else:
+                draw_custom_links_body(body_detected.pose_landmarks, canvas)
 
         # If hands are detected, draw landmarks and connections on the frame
         if hands_detected.multi_hand_landmarks:
@@ -162,7 +202,21 @@ def bodyandhands():
                         connection_drawing_spec=custom_connection_style_hands
                     )
 
-                draw_custom_links_hands(hand_landmarks, canvas)
+                if show_camera:
+                    draw_custom_links_hands(hand_landmarks, frame)
+                else:
+                    draw_custom_links_hands(hand_landmarks, canvas)
+
+        # Draw link between the two hands
+        hands_list = hands_detected.multi_hand_landmarks
+        if hands_list is not None and len(hands_list) == 2:
+            hand1 = hands_list[0]
+            hand2 = hands_list[1]
+
+            if show_camera:
+                draw_hand_to_hand_connection(hand1, hand2, frame)
+            else:
+                draw_hand_to_hand_connection(hand1, hand2, canvas)
 
         # Display every frame, even when no hand is currently detected
         if show_camera:
