@@ -1,16 +1,40 @@
 import cv2 as cv
 import mediapipe as mp
+import numpy as np
+
+# Do we want to show only the skeleton ?
+show_camera = False
 
 # Body
 mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
-mp_styles = mp.solutions.drawing_styles
-
 # Hands
 mp_hands = mp.solutions.hands
+
+# General
 drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
+# Custom Landmark Styles
+custom_landmark_style_hands = drawing.DrawingSpec(
+    color=(0, 0, 255),
+    thickness=3,
+    circle_radius=3
+)
+custom_landmark_style_body = drawing.DrawingSpec(
+    color=(255, 0, 0),
+    thickness=3,
+    circle_radius=3
+)
+
+# Custom Connection Styles
+custom_connection_style_hands = drawing.DrawingSpec(
+    color=(255, 255, 255),
+    thickness=3
+)
+custom_connection_style_body = drawing.DrawingSpec(
+    color=(0, 255, 0),
+    thickness=3
+)
 
 def bodyandhands():
     # Body
@@ -53,28 +77,54 @@ def bodyandhands():
         body_detected = pose.process(rgb_frame)
         hands_detected = hands.process(rgb_frame)
 
+        # Create the black image only if we don't want to see the camera
+        if not show_camera:
+            canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
+
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
-            mp_drawing.draw_landmarks(
-                frame,
-                body_detected.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,
-                mp_styles.get_default_pose_landmarks_style()
-            )
+            if show_camera:
+                drawing.draw_landmarks(
+                    frame,
+                    body_detected.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=custom_landmark_style_body,
+                    connection_drawing_spec=custom_connection_style_body
+                )
+            else:
+                drawing.draw_landmarks(
+                    canvas,
+                    body_detected.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=custom_landmark_style_body,
+                    connection_drawing_spec=custom_connection_style_body
+                )
 
         # If hands are detected, draw landmarks and connections on the frame
         if hands_detected.multi_hand_landmarks:
             for hand_landmarks in hands_detected.multi_hand_landmarks:
-                drawing.draw_landmarks(
-                    frame,
-                    hand_landmarks,
-                    mp_hands.HAND_CONNECTIONS,
-                    drawing_styles.get_default_hand_landmarks_style(),
-                    drawing_styles.get_default_hand_connections_style(),
-                )
+                if show_camera:
+                    drawing.draw_landmarks(
+                        frame,
+                        hand_landmarks,
+                        mp_hands.HAND_CONNECTIONS,
+                        landmark_drawing_spec=custom_landmark_style_hands,
+                        connection_drawing_spec=custom_connection_style_hands
+                    )
+                else:
+                    drawing.draw_landmarks(
+                        canvas,
+                        hand_landmarks,
+                        mp_hands.HAND_CONNECTIONS,
+                        landmark_drawing_spec=custom_landmark_style_hands,
+                        connection_drawing_spec=custom_connection_style_hands
+                    )
 
         # Display every frame, even when no hand is currently detected
-        cv.imshow(window_name, frame)
+        if show_camera:
+            cv.imshow(window_name, frame)
+        else:
+            cv.imshow(window_name, canvas)
 
         # Exit the loop if 'q' key is pressed
         if cv.waitKey(20) & 0xFF == ord("q"):
