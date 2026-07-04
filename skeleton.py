@@ -1,5 +1,8 @@
+# This file will reproduce the nodes but without the camera displayed
+
 import cv2 as cv
 import mediapipe as mp
+import numpy as np
 
 # Body
 mp_pose = mp.solutions.pose
@@ -12,7 +15,7 @@ drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
 
-def bodyandhands():
+def skeleton():
     # Body
     pose = mp_pose.Pose(
         static_image_mode=False,
@@ -35,7 +38,7 @@ def bodyandhands():
         print("Camera not found")
         return
 
-    window_name = "Body and Hands Detection"
+    window_name = "Skeleton Only"
     cv.namedWindow(window_name)
 
     # Constantly run
@@ -53,10 +56,13 @@ def bodyandhands():
         body_detected = pose.process(rgb_frame)
         hands_detected = hands.process(rgb_frame)
 
+        # Create empty image with no camera
+        canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
+
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
             mp_drawing.draw_landmarks(
-                frame,
+                canvas,
                 body_detected.pose_landmarks,
                 mp_pose.POSE_CONNECTIONS,
                 mp_styles.get_default_pose_landmarks_style()
@@ -66,7 +72,7 @@ def bodyandhands():
         if hands_detected.multi_hand_landmarks:
             for hand_landmarks in hands_detected.multi_hand_landmarks:
                 drawing.draw_landmarks(
-                    frame,
+                    canvas,
                     hand_landmarks,
                     mp_hands.HAND_CONNECTIONS,
                     drawing_styles.get_default_hand_landmarks_style(),
@@ -74,7 +80,7 @@ def bodyandhands():
                 )
 
         # Display every frame, even when no hand is currently detected
-        cv.imshow(window_name, frame)
+        cv.imshow(window_name, canvas)
 
         # Exit the loop if 'q' key is pressed
         if cv.waitKey(20) & 0xFF == ord("q"):
@@ -83,4 +89,4 @@ def bodyandhands():
     cam.release()
     cv.destroyAllWindows()
 
-bodyandhands()
+skeleton()

@@ -6,7 +6,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_styles = mp.solutions.drawing_styles
 
 
-def main():
+def body():
     pose = mp_pose.Pose(
         static_image_mode=False,
         model_complexity=1,
@@ -54,6 +54,4 @@ def main():
     cam.release()
     cv.destroyAllWindows()
 
-
-if __name__ == "__main__":
-    main()
+body()

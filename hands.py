@@ -6,7 +6,7 @@ drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
 
-def hand_detection():
+def hands():
     # Initialize the Hands model
     hands = mp_hands.Hands(
         static_image_mode=False,  # Set to False for processing video frames
@@ -57,4 +57,4 @@ def hand_detection():
     cam.release()
     cv.destroyAllWindows()
 
-hand_detection()
+hands()
