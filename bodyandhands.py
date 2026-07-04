@@ -36,6 +36,46 @@ custom_connection_style_body = drawing.DrawingSpec(
     thickness=3
 )
 
+# Custom links
+
+# Hands
+def draw_custom_links_hands(hand_landmarks, canvas, color=(0, 255, 255), thickness=2):
+    h, w, _ = canvas.shape
+
+    def point(id):
+        lm = hand_landmarks.landmark[id]
+        return int(lm.x * w), int(lm.y * h)
+
+    # Standard hand structure + extra freedom to customize
+    connections = [
+        # Custom Links
+        (4, 8)
+    ]
+
+    for a, b in connections:
+        cv.line(canvas, point(a), point(b), color, thickness)
+
+    # Optional: highlight joints (nodes)
+    for i in range(21):
+        cv.circle(canvas, point(i), 3, (0, 0, 255), -1)
+
+# Body
+def draw_custom_links_body(landmarks, image):
+    h, w, _ = image.shape
+
+    def point(id):
+        lm = landmarks.landmark[id]
+        return int(lm.x * w), int(lm.y * h)
+
+    # Example custom links
+    connections = [
+        # Custom Links
+        (10, 12), (9, 11)
+    ]
+
+    for a, b in connections:
+        cv.line(image, point(a), point(b), (255, 0, 255), 2)
+
 def bodyandhands():
     # Body
     pose = mp_pose.Pose(
@@ -100,6 +140,8 @@ def bodyandhands():
                     connection_drawing_spec=custom_connection_style_body
                 )
 
+            draw_custom_links_body(body_detected.pose_landmarks, canvas)
+
         # If hands are detected, draw landmarks and connections on the frame
         if hands_detected.multi_hand_landmarks:
             for hand_landmarks in hands_detected.multi_hand_landmarks:
@@ -119,6 +161,8 @@ def bodyandhands():
                         landmark_drawing_spec=custom_landmark_style_hands,
                         connection_drawing_spec=custom_connection_style_hands
                     )
+
+                draw_custom_links_hands(hand_landmarks, canvas)
 
         # Display every frame, even when no hand is currently detected
         if show_camera:
