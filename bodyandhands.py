@@ -5,6 +5,15 @@ import numpy as np
 # Do we want to show only the skeleton ?
 show_camera = True
 
+# Do we want to use the 3D model ?
+use_3d_model = False
+
+# If we use the 3D model, we do not use the camera
+if use_3d_model:
+    show_camera = False
+
+flip_image = False
+
 # Body
 mp_pose = mp.solutions.pose
 # Hands
@@ -105,7 +114,7 @@ def draw_hand_to_hand_connection(hand1, hand2, image, color=color_custom_connect
 
     connections = [
         # Custom Links
-        (8, 12),
+        (12, 12),
     ]
 
     for a, b in connections:
@@ -128,7 +137,7 @@ def bodyandhands():
         min_tracking_confidence=0.5,
     )
 
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(1)
 
     if not cam.isOpened():
         print("Camera not found")
@@ -147,7 +156,8 @@ def bodyandhands():
             break
 
         # Invert the frame to mirror
-        frame = cv.flip(frame, 1)
+        if flip_image:
+            frame = cv.flip(frame, 1)
 
         # Convert the frame from BGR to RGB (required by MediaPipe)
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
