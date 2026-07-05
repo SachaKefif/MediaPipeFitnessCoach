@@ -17,23 +17,23 @@ drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
 # Variables
-color_landmarks_hands = (0, 0, 255)
+color_landmarks_hands = (255, 0, 0)
 thickness_landmarks_hands = 3
 circle_radius_landmarks_hands = 3
 
-color_landmarks_body = (255, 0, 0)
+color_landmarks_body = (0, 0, 255)
 thickness_landmarks_body = 3
 circle_radius_landmarks_body = 3
 
-color_connection_hands = (255, 255, 255)
+color_connection_hands = (0, 255, 0)
 thickness_connection_hands = 3
 
-color_connection_body = (0, 255, 0)
+color_connection_body = (255, 255, 255)
 thickness_connection_body = 3
 
 color_custom_connection_hands = (0, 255, 255)
 color_custom_connection_two_hands = (0, 255, 255)
-color_custom_connection_body = (255, 0, 255)
+color_custom_connection_body = (0, 255, 255)
 
 # Custom Landmark Styles
 custom_landmark_style_hands = drawing.DrawingSpec(
@@ -75,10 +75,6 @@ def draw_custom_links_hands(hand_landmarks, image, color=color_custom_connection
 
     for a, b in connections:
         cv.line(image, point(a), point(b), color, thickness)
-
-    # Optional: highlight joints (nodes)
-    for i in range(21):
-        cv.circle(image, point(i), 3, (0, 0, 255), -1)
 
 # Body
 def draw_custom_links_body(landmarks, image, color=color_custom_connection_body, thickness=thickness_connection_body):
@@ -154,9 +150,6 @@ def bodyandhands():
         body_detected = pose.process(rgb_frame)
         hands_detected = hands.process(rgb_frame)
 
-        # Create the black image if we don't want to see the camera
-        canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
-
         # Create 3 separate render buffers
         # Resize reference (important so everything matches)
         h, w, _ = frame.shape
@@ -167,7 +160,10 @@ def bodyandhands():
         # 2) Skeleton-only view (bottom-left)
         skeleton_view = np.zeros((h, w, 3), dtype=np.uint8)
 
-        # 3) 3D placeholder view (right side)
+        # 3) Body-Skeleton-only view (top-right)
+        body_skeleton_view = np.zeros((h, w, 3), dtype=np.uint8)
+
+        # 4) 3D placeholder view (bottom-right)
         model_view = np.zeros((h, w, 3), dtype=np.uint8)
 
         # If body is detected, draw landmarks and connections on the frame
@@ -188,8 +184,25 @@ def bodyandhands():
                 connection_drawing_spec=custom_connection_style_body
             )
 
+            drawing.draw_landmarks(
+                body_skeleton_view,
+                body_detected.pose_landmarks,
+                mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=custom_landmark_style_body,
+                connection_drawing_spec=custom_connection_style_body
+            )
+
+            drawing.draw_landmarks(
+                model_view,
+                body_detected.pose_landmarks,
+                mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=custom_landmark_style_body,
+                connection_drawing_spec=custom_connection_style_body
+            )
+
             draw_custom_links_body(body_detected.pose_landmarks, camera_view)
             draw_custom_links_body(body_detected.pose_landmarks, skeleton_view)
+            draw_custom_links_body(body_detected.pose_landmarks, model_view)
 
         # If hands are detected, draw landmarks and connections on the frame
         if hands_detected.multi_hand_landmarks:
@@ -212,8 +225,17 @@ def bodyandhands():
                     connection_drawing_spec=custom_connection_style_hands
                 )
 
+                drawing.draw_landmarks(
+                    model_view,
+                    hand_landmarks,
+                    mp_hands.HAND_CONNECTIONS,
+                    landmark_drawing_spec=custom_landmark_style_hands,
+                    connection_drawing_spec=custom_connection_style_hands
+                )
+
                 draw_custom_links_hands(hand_landmarks, camera_view)
                 draw_custom_links_hands(hand_landmarks, skeleton_view)
+                draw_custom_links_hands(hand_landmarks, model_view)
 
         # Draw link between the two hands
         hands_list = hands_detected.multi_hand_landmarks
@@ -222,24 +244,35 @@ def bodyandhands():
             draw_hand_to_hand_connection(
                 hands_list[0],
                 hands_list[1],
+                camera_view
+            )
+            draw_hand_to_hand_connection(
+                hands_list[0],
+                hands_list[1],
                 skeleton_view
             )
             draw_hand_to_hand_connection(
                 hands_list[0],
                 hands_list[1],
-                camera_view
+                model_view
             )
 
         # Resize all to same height
-        camera_view = cv.resize(camera_view, (640, 360))
-        skeleton_view = cv.resize(skeleton_view, (640, 360))
-        model_view = cv.resize(model_view, (640, 720))
+        # Left = Horizontal
+        # Right = Vertical
+        display_w = int(1920 / 2)
+        display_h = int(1080 / 2)
+        camera_view = cv.resize(camera_view, (display_w, display_h))
+        skeleton_view = cv.resize(skeleton_view, (display_w, display_h))
+        body_skeleton_view = cv.resize(body_skeleton_view, (display_w, display_h))
+        model_view = cv.resize(model_view, (display_w, display_h))
 
         # Stack left side (camera + skeleton)
         left_side = np.vstack((camera_view, skeleton_view))
+        right_side = np.vstack((body_skeleton_view, model_view))
 
         # Combine with right side (model)
-        final = np.hstack((left_side, model_view))
+        final = np.hstack((left_side, right_side))
 
         cv.imshow(window_name, final)
 
