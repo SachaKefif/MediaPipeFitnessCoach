@@ -166,17 +166,30 @@ def draw_normalized_view(pose_array, normalized_view):
     normalized_pose_array = clean_data(pose_array)
     print(normalized_pose_array)
 
-    # Draw normalized view
     h, w, _ = normalized_view.shape
-    # points
+
+    # Scale the view
+    scale = min(w, h) * 0.1
+
+    # Shift to the center of the screen
+    offset_x = w // 2
+    offset_y = h // 2
+
+    # Draw points
     for p in normalized_pose_array:
-        x, y = int(p[0] * w), int(p[1] * h)
+        x = int(p[0] * scale + offset_x)
+        y = int(p[1] * scale + offset_y)
+
         cv.circle(normalized_view, (x, y), 5, (0, 255, 0), -1)
-    # connections
+
+    # Draw connections
     for a, b in mp_pose.POSE_CONNECTIONS:
         if a < len(normalized_pose_array) and b < len(normalized_pose_array):
-            x1, y1 = int(normalized_pose_array[a][0] * w), int(normalized_pose_array[a][1] * h)
-            x2, y2 = int(normalized_pose_array[b][0] * w), int(normalized_pose_array[b][1] * h)
+            x1 = int(normalized_pose_array[a][0] * scale + offset_x)
+            y1 = int(normalized_pose_array[a][1] * scale + offset_y)
+
+            x2 = int(normalized_pose_array[b][0] * scale + offset_x)
+            y2 = int(normalized_pose_array[b][1] * scale + offset_y)
 
             cv.line(normalized_view, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
