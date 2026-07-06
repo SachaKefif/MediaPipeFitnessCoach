@@ -6,6 +6,8 @@
 import cv2 as cv
 import mediapipe as mp
 import numpy as np
+# Force NumPy to print standard numbers instead of scientific notation
+np.set_printoptions(suppress=True)
 
 # Body
 mp_pose = mp.solutions.pose
@@ -298,19 +300,27 @@ def add_data(normalized_array):
     distance_array = np.array(paired_distances, dtype=np.float32)
 
     # Display the wrist-shoulder distance
-    print(distance_array[0])
+    # print(distance_array[0])
 
 
     # Concatenate all of the arrays
     # First transform all of the arrays into a 1D array
-
-
-
+    flat_coords = coordonates_array.flatten()
+    flat_angles = angle_array.flatten()
+    flat_distances = distance_array.flatten()
+    final_array = np.concatenate((flat_coords, flat_angles, flat_distances))
+    return final_array
 
 def clean_data(pose_array):
     filtered_array = delete_coords(pose_array)
     normalized_array = normalize_coords(filtered_array)
     final_array = add_data(normalized_array)
+
+    # Print each cell one at a time with its index
+    print("\n\n--- Final Feature Vector ---")
+    for index, value in enumerate(final_array):
+        print(f"[{index}] : {value}")
+
     return normalized_array
 
 def draw_normalized_view(pose_array, normalized_view):
