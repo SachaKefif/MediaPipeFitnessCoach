@@ -1,16 +1,6 @@
 # Algorithm : XGBoost
 
 # TO_DO :
-- Get 3D spacial coordonates
-- Normalize :
-    center = hip_center
-    scale = shoulder_width
-    point_normalized = (point - center) / scale
-- Delete points :
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    21, 22
-    17, 18
-    29, 30
 - Train & Test
 
 Input :
@@ -33,6 +23,7 @@ Input :
     Difference of the Coordonates
 - Distances :
     Wrist - Shoulder
+    Ankle - Shoulder
 
 Output :
     True

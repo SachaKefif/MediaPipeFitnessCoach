@@ -16,15 +16,25 @@ mp_hands = mp.solutions.hands
 drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
+# Normalized body coordonates
+L_SHOULDER, R_SHOULDER = 0, 1
+L_ELBOW, R_ELBOW = 2, 3
+L_WRIST, R_WRIST = 4, 5
+L_HAND, R_HAND = 6, 7
+L_HIP, R_HIP = 8, 9
+L_KNEE, R_KNEE = 10, 11
+L_ANKLE, R_ANKLE = 12, 13
+L_FOOT, R_FOOT = 14, 15
+
 # Nouvelles connexions basées sur le tableau filtré de 16 points
 CUSTOM_BODY_CONNECTIONS = [
-    (0, 1),   # Épaules
-    (0, 2), (2, 4), (4, 6), # Bras gauche
-    (1, 3), (3, 5), (5, 7), # Bras droit
-    (0, 8), (1, 9), # Torse (Épaules -> Hanches)
-    (8, 9),   # Hanches
-    (8, 10), (10, 12), (12, 14), # Jambe gauche
-    (9, 11), (11, 13), (13, 15)  # Jambe droite
+    (L_SHOULDER, R_SHOULDER),   # Épaules
+    (L_SHOULDER, L_ELBOW), (L_ELBOW, L_WRIST), (L_WRIST, L_HAND), # Bras gauche
+    (R_SHOULDER, R_ELBOW), (R_ELBOW, R_WRIST), (R_WRIST, R_HAND), # Bras droit
+    (L_SHOULDER, L_HIP), (R_SHOULDER, R_HIP), # Torse (Épaules -> Hanches)
+    (L_HIP, R_HIP),   # Hanches
+    (L_HIP, L_KNEE), (L_KNEE, L_ANKLE), (L_ANKLE, L_FOOT), # Jambe gauche
+    (R_HIP, R_KNEE), (R_KNEE, R_ANKLE), (R_ANKLE, R_FOOT)  # Jambe droite
 ]
 
 # Variables
@@ -163,9 +173,107 @@ def normalize_coords(filtered_array):
 
     return normalized_array
 
+# Calculate the angle between three landmarks
+import numpy as np
+
+
+def calc_angle(landmarks, p1_idx, p2_idx, p3_idx):
+    """
+    Calculates the angle (in degrees) at point p2, formed by the line segments [p2, p1] and [p2, p3].
+    """
+    # 1. Extract the [x, y, z] coordinates of the 3 points
+    a = landmarks[p1_idx]
+    b = landmarks[p2_idx] # The vertex of the angle
+    c = landmarks[p3_idx]
+
+    # 2. Create the vectors BA and BC
+    ba = a - b
+    bc = c - b
+
+    # 3. Calculate the dot product and the norms (lengths) of the vectors
+    dot_product = np.dot(ba, bc)
+    norm_ba = np.linalg.norm(ba)
+    norm_bc = np.linalg.norm(bc)
+
+    # Safety check: prevent division by zero if two points are perfectly overlapping
+    if norm_ba == 0 or norm_bc == 0:
+        return 0.0
+
+    # 4. Calculate the cosine of the angle
+    cosine_angle = dot_product / (norm_ba * norm_bc)
+
+    # Safety check: correct slight floating-point precision errors (e.g., 1.000000002)
+    # np.arccos will crash if the value is not strictly between -1.0 and 1.0
+    cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
+
+    # 5. Calculate the angle in radians and convert it to degrees
+    angle_rad = np.arccos(cosine_angle)
+    angle_deg = np.degrees(angle_rad)
+
+    return angle_deg
+
+
+def add_data(normalized_array):
+    # Coordonates
+    coordonates_array = normalized_array
+
+    # Angles
+    angle_array = [0]*9
+    # [0] = Elbow
+    # [1] = Shoulder
+    # [2] = Hip
+    # [3] = Knee
+    # [4] = Wrist
+    # [5] = Ankle
+    # [6] = Body - to ground (to knee)
+    # [7] = Body - to ground (to hip)
+    # [8] = Body - to ground (to shoulder)
+
+    # Left side
+    left_angles = [
+        calc_angle(normalized_array, L_SHOULDER, L_ELBOW, L_WRIST),
+        calc_angle(normalized_array, L_ELBOW, L_SHOULDER, L_HIP),
+        calc_angle(normalized_array, L_SHOULDER, L_HIP, L_ANKLE),
+        calc_angle(normalized_array, L_HIP, L_KNEE, L_ANKLE),
+        calc_angle(normalized_array, L_HAND, L_WRIST, L_ELBOW),
+        calc_angle(normalized_array, L_KNEE, L_ANKLE, L_FOOT),
+        calc_angle(normalized_array, L_ANKLE, L_KNEE, L_WRIST),
+        calc_angle(normalized_array, L_ANKLE, L_HIP, L_WRIST),
+        calc_angle(normalized_array, L_ANKLE, L_SHOULDER, L_WRIST),
+    ]
+
+    # Right side
+    right_angles = [
+        calc_angle(normalized_array, R_SHOULDER, R_ELBOW, R_WRIST),
+        calc_angle(normalized_array, R_ELBOW, R_SHOULDER, R_HIP),
+        calc_angle(normalized_array, R_SHOULDER, R_HIP, R_ANKLE),
+        calc_angle(normalized_array, R_HIP, R_KNEE, R_ANKLE),
+        calc_angle(normalized_array, R_HAND, R_WRIST, R_ELBOW),
+        calc_angle(normalized_array, R_KNEE, R_ANKLE, R_FOOT),
+        calc_angle(normalized_array, R_ANKLE, R_KNEE, R_WRIST),
+        calc_angle(normalized_array, R_ANKLE, R_HIP, R_WRIST),
+        calc_angle(normalized_array, R_ANKLE, R_SHOULDER, R_WRIST),
+    ]
+
+    # Concatenate the two arrays
+    # Format final : [[L0, R0], [L1, R1], ... [L8, R8]]
+    paired_angles = [[r, l] for r, l in zip(right_angles, left_angles)] # Inverted because image is flipped
+    # Convert to a 2D NumPy array for your ML model
+    angle_array = np.array(paired_angles, dtype=np.float32)
+
+    # print("Angles : ", angle_array)
+    # Display only the elbow angle
+    print(angle_array[0])
+
+    # Distances
+    distance_array = [0]*2
+
+
+
 def clean_data(pose_array):
     filtered_array = delete_coords(pose_array)
     normalized_array = normalize_coords(filtered_array)
+    final_array = add_data(normalized_array)
     return normalized_array
 
 def draw_normalized_view(pose_array, normalized_view):
@@ -193,7 +301,7 @@ def draw_normalized_view(pose_array, normalized_view):
 
         cv.line(normalized_view, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
-def bodyandhands():
+def full_display():
     # Body
     pose = mp_pose.Pose(
         static_image_mode=False,
@@ -370,4 +478,4 @@ def bodyandhands():
     cam.release()
     cv.destroyAllWindows()
 
-bodyandhands()
+full_display()
