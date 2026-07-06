@@ -16,6 +16,17 @@ mp_hands = mp.solutions.hands
 drawing = mp.solutions.drawing_utils
 drawing_styles = mp.solutions.drawing_styles
 
+# Nouvelles connexions basées sur le tableau filtré de 16 points
+CUSTOM_BODY_CONNECTIONS = [
+    (0, 1),   # Épaules
+    (0, 2), (2, 4), (4, 6), # Bras gauche
+    (1, 3), (3, 5), (5, 7), # Bras droit
+    (0, 8), (1, 9), # Torse (Épaules -> Hanches)
+    (8, 9),   # Hanches
+    (8, 10), (10, 12), (12, 14), # Jambe gauche
+    (9, 11), (11, 13), (13, 15)  # Jambe droite
+]
+
 # Variables
 color_landmarks_hands = (255, 0, 0)
 thickness_landmarks_hands = 3
@@ -120,78 +131,67 @@ def extract_pose_landmarks(results):
     return np.array(coords, dtype=np.float32)
 
 def delete_coords(pose_array):
-    keep = [False]*33
+    keep = [False] * 33
 
-    # List which landmarks to keep
-    keep[11] = True
-    keep[12] = True
-    keep[13] = True
-    keep[14] = True
-    keep[15] = True
-    keep[16] = True
-    keep[19] = True
-    keep[20] = True
-    keep[23] = True
-    keep[24] = True
-    keep[25] = True
-    keep[26] = True
-    keep[27] = True
-    keep[28] = True
-    keep[31] = True
-    keep[32] = True
+    # Liste des repères à garder
+    keep[11] = keep[12] = True  # Épaules
+    keep[13] = keep[14] = True  # Coudes
+    keep[15] = keep[16] = True  # Poignets
+    keep[19] = keep[20] = True  # Index (Mains)
+    keep[23] = keep[24] = True  # Hanches
+    keep[25] = keep[26] = True  # Genoux
+    keep[27] = keep[28] = True  # Chevilles
+    keep[31] = keep[32] = True  # Pieds
 
     filtered = pose_array[keep]
-
     return filtered
 
-def normalize_coords(pose_array):
+def normalize_coords(filtered_array):
     # Calculate the center coordonate
-    hip_center = (pose_array[9] + pose_array[10]) / 2
+    hip_center = (filtered_array[8] + filtered_array[9]) / 2
     # Calculate the shoulder width for scaling
-    shoulder_width = np.linalg.norm(pose_array[1] - pose_array[2])
+    shoulder_center = (filtered_array[0] + filtered_array[1]) / 2
+    # Calculate  the torso length
+    torso_length = np.linalg.norm(shoulder_center - hip_center)
+
+    # If torso is lost
+    if torso_length < 1e-6:
+        torso_length = 1.0
 
     # Normalize each point
-    pose_array = (pose_array - hip_center) / shoulder_width
+    normalized_array = (filtered_array - hip_center) / torso_length
 
-    return pose_array
-
+    return normalized_array
 
 def clean_data(pose_array):
-    pose_array = delete_coords(pose_array)
-    pose_array = normalize_coords(pose_array)
-    return pose_array
+    filtered_array = delete_coords(pose_array)
+    normalized_array = normalize_coords(filtered_array)
+    return normalized_array
 
 def draw_normalized_view(pose_array, normalized_view):
-    # Clean the data
+    # Récupère les 16 points prêts pour le ML
     normalized_pose_array = clean_data(pose_array)
-    print(normalized_pose_array)
 
     h, w, _ = normalized_view.shape
-
-    # Scale the view
-    scale = min(w, h) * 0.1
-
-    # Shift to the center of the screen
+    scale = min(w, h) * 0.25
     offset_x = w // 2
     offset_y = h // 2
 
-    # Draw points
+    # Dessiner les points
     for p in normalized_pose_array:
         x = int(p[0] * scale + offset_x)
         y = int(p[1] * scale + offset_y)
-
         cv.circle(normalized_view, (x, y), 5, (0, 255, 0), -1)
 
-    # Draw connections
-    for a, b in mp_pose.POSE_CONNECTIONS:
-        if a < len(normalized_pose_array) and b < len(normalized_pose_array):
-            x1 = int(normalized_pose_array[a][0] * scale + offset_x)
-            y1 = int(normalized_pose_array[a][1] * scale + offset_y)
+    # Dessiner les connexions avec la carte personnalisée
+    for a, b in CUSTOM_BODY_CONNECTIONS:
+        x1 = int(normalized_pose_array[a][0] * scale + offset_x)
+        y1 = int(normalized_pose_array[a][1] * scale + offset_y)
 
-            x2 = int(normalized_pose_array[b][0] * scale + offset_x)
-            y2 = int(normalized_pose_array[b][1] * scale + offset_y)
+        x2 = int(normalized_pose_array[b][0] * scale + offset_x)
+        y2 = int(normalized_pose_array[b][1] * scale + offset_y)
 
-            cv.line(normalized_view, (x1, y1), (x2, y2), (255, 255, 255), 2)
+        cv.line(normalized_view, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
 def bodyandhands():
     # Body
