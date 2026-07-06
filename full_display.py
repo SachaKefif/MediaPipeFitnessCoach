@@ -109,6 +109,77 @@ def draw_hand_to_hand_connection(hand1, hand2, image, color=color_custom_connect
     for a, b in connections:
         cv.line(image, point(hand1, a), point(hand2, b), color, thickness)
 
+
+def extract_pose_landmarks(results):
+    coords = []
+
+    if results.pose_landmarks:
+        for lm in results.pose_landmarks.landmark:
+            coords.append([lm.x, lm.y, lm.z])
+
+    return np.array(coords, dtype=np.float32)
+
+def delete_coords(pose_array):
+    keep = [False]*33
+
+    # List which landmarks to keep
+    keep[11] = True
+    keep[12] = True
+    keep[13] = True
+    keep[14] = True
+    keep[15] = True
+    keep[16] = True
+    keep[19] = True
+    keep[20] = True
+    keep[23] = True
+    keep[24] = True
+    keep[25] = True
+    keep[26] = True
+    keep[27] = True
+    keep[28] = True
+    keep[31] = True
+    keep[32] = True
+
+    filtered = pose_array[keep]
+
+    return filtered
+
+def normalize_coords(pose_array):
+    # Calculate the center coordonate
+    hip_center = (pose_array[9] + pose_array[10]) / 2
+    # Calculate the shoulder width for scaling
+    shoulder_width = np.linalg.norm(pose_array[1] - pose_array[2])
+
+    # Normalize each point
+    pose_array = (pose_array - hip_center) / shoulder_width
+
+    return pose_array
+
+
+def clean_data(pose_array):
+    pose_array = delete_coords(pose_array)
+    pose_array = normalize_coords(pose_array)
+    return pose_array
+
+def draw_normalized_view(pose_array, normalized_view):
+    # Clean the data
+    normalized_pose_array = clean_data(pose_array)
+    print(normalized_pose_array)
+
+    # Draw normalized view
+    h, w, _ = normalized_view.shape
+    # points
+    for p in normalized_pose_array:
+        x, y = int(p[0] * w), int(p[1] * h)
+        cv.circle(normalized_view, (x, y), 5, (0, 255, 0), -1)
+    # connections
+    for a, b in mp_pose.POSE_CONNECTIONS:
+        if a < len(normalized_pose_array) and b < len(normalized_pose_array):
+            x1, y1 = int(normalized_pose_array[a][0] * w), int(normalized_pose_array[a][1] * h)
+            x2, y2 = int(normalized_pose_array[b][0] * w), int(normalized_pose_array[b][1] * h)
+
+            cv.line(normalized_view, (x1, y1), (x2, y2), (255, 255, 255), 2)
+
 def bodyandhands():
     # Body
     pose = mp_pose.Pose(
@@ -160,14 +231,22 @@ def bodyandhands():
         # 2) Skeleton-only view (bottom-left)
         skeleton_view = np.zeros((h, w, 3), dtype=np.uint8)
 
-        # 3) Body-Skeleton-only view (top-right)
-        body_skeleton_view = np.zeros((h, w, 3), dtype=np.uint8)
+        # 3) Normalized view (top-right)
+        normalized_view = np.zeros((h, w, 3), dtype=np.uint8)
 
         # 4) 3D placeholder view (bottom-right)
         model_view = np.zeros((h, w, 3), dtype=np.uint8)
 
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
+            # Extract the coordonates
+            pose_array = extract_pose_landmarks(body_detected)
+
+            # Print the coordonates
+            # print(pose_array)
+            # Print specific coordonates
+            # print(pose_array[1])
+
             drawing.draw_landmarks(
                 camera_view,
                 body_detected.pose_landmarks,
@@ -184,13 +263,7 @@ def bodyandhands():
                 connection_drawing_spec=custom_connection_style_body
             )
 
-            drawing.draw_landmarks(
-                body_skeleton_view,
-                body_detected.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,
-                landmark_drawing_spec=custom_landmark_style_body,
-                connection_drawing_spec=custom_connection_style_body
-            )
+            draw_normalized_view(pose_array, normalized_view)
 
             drawing.draw_landmarks(
                 model_view,
@@ -207,6 +280,7 @@ def bodyandhands():
         # If hands are detected, draw landmarks and connections on the frame
         if hands_detected.multi_hand_landmarks:
             for hand_landmarks in hands_detected.multi_hand_landmarks:
+
                 # always draw camera view if it exists
                 drawing.draw_landmarks(
                     camera_view,
@@ -264,12 +338,12 @@ def bodyandhands():
         display_h = int(1080 / 2)
         camera_view = cv.resize(camera_view, (display_w, display_h))
         skeleton_view = cv.resize(skeleton_view, (display_w, display_h))
-        body_skeleton_view = cv.resize(body_skeleton_view, (display_w, display_h))
+        normalized_view = cv.resize(normalized_view, (display_w, display_h))
         model_view = cv.resize(model_view, (display_w, display_h))
 
         # Stack left side (camera + skeleton)
         left_side = np.vstack((camera_view, skeleton_view))
-        right_side = np.vstack((body_skeleton_view, model_view))
+        right_side = np.vstack((normalized_view, model_view))
 
         # Combine with right side (model)
         final = np.hstack((left_side, right_side))

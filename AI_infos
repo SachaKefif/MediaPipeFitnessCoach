@@ -1,6 +1,7 @@
 # Algorithm : XGBoost
 
-# TODO :
+# TO_DO :
+- Get 3D spacial coordonates
 - Normalize :
     center = hip_center
     scale = shoulder_width
@@ -10,7 +11,7 @@
     21, 22
     17, 18
     29, 30
-
+- Train & Test
 
 Input :
 - Angles :
