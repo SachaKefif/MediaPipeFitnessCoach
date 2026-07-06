@@ -131,12 +131,13 @@ def draw_hand_to_hand_connection(hand1, hand2, image, color=color_custom_connect
         cv.line(image, point(hand1, a), point(hand2, b), color, thickness)
 
 
-def extract_pose_landmarks(results):
+def extract_pose_landmarks(results, w, h):
     coords = []
 
     if results.pose_landmarks:
         for lm in results.pose_landmarks.landmark:
-            coords.append([lm.x, lm.y, lm.z])
+            # Multiply by width and height to restore a perfect mathematical grid
+            coords.append([lm.x * w, lm.y * h, lm.z * w])
 
     return np.array(coords, dtype=np.float32)
 
@@ -179,31 +180,27 @@ import numpy as np
 
 def calc_angle(landmarks, p1_idx, p2_idx, p3_idx):
     """
-    Calculates the angle (in degrees) at point p2, formed by the line segments [p2, p1] and [p2, p3].
+    Calculates the 2D angle (in degrees) at point p2.
     """
-    # 1. Extract the [x, y, z] coordinates of the 3 points
-    a = landmarks[p1_idx]
-    b = landmarks[p2_idx] # The vertex of the angle
-    c = landmarks[p3_idx]
+    # 1. Extract ONLY the [x, y] coordinates using [:2], ignoring z
+    a = landmarks[p1_idx][:2]
+    b = landmarks[p2_idx][:2]
+    c = landmarks[p3_idx][:2]
 
     # 2. Create the vectors BA and BC
     ba = a - b
     bc = c - b
 
-    # 3. Calculate the dot product and the norms (lengths) of the vectors
+    # 3. Calculate the dot product and the norms (lengths)
     dot_product = np.dot(ba, bc)
     norm_ba = np.linalg.norm(ba)
     norm_bc = np.linalg.norm(bc)
 
-    # Safety check: prevent division by zero if two points are perfectly overlapping
     if norm_ba == 0 or norm_bc == 0:
         return 0.0
 
     # 4. Calculate the cosine of the angle
     cosine_angle = dot_product / (norm_ba * norm_bc)
-
-    # Safety check: correct slight floating-point precision errors (e.g., 1.000000002)
-    # np.arccos will crash if the value is not strictly between -1.0 and 1.0
     cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
 
     # 5. Calculate the angle in radians and convert it to degrees
@@ -361,7 +358,7 @@ def full_display():
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
             # Extract the coordonates
-            pose_array = extract_pose_landmarks(body_detected)
+            pose_array = extract_pose_landmarks(body_detected, w, h)
 
             # Print the coordonates
             # print(pose_array)
