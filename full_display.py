@@ -175,9 +175,6 @@ def normalize_coords(filtered_array):
     return normalized_array
 
 # Calculate the angle between three landmarks
-import numpy as np
-
-
 def calc_angle(landmarks, p1_idx, p2_idx, p3_idx):
     """
     Calculates the 2D angle (in degrees) at point p2.
@@ -209,13 +206,29 @@ def calc_angle(landmarks, p1_idx, p2_idx, p3_idx):
 
     return angle_deg
 
+def calc_distance(landmarks, p1_idx, p2_idx):
+    """
+    Calculates the Euclidean distance between two landmarks.
+    """
+    # 1. Extract the [x, y] coordinates
+    a = landmarks[p1_idx][:2]
+    b = landmarks[p2_idx][:2]
+
+    # 2. Calculate the vector between the two points
+    vector = a - b
+
+    # 3. Calculate the distance (the magnitude/length of the vector)
+    distance = np.linalg.norm(vector)
+
+    return distance
 
 def add_data(normalized_array):
     # Coordonates
     coordonates_array = normalized_array
 
+
+
     # Angles
-    angle_array = [0]*9
     # [0] = Elbow
     # [1] = Shoulder
     # [2] = Hip
@@ -252,18 +265,45 @@ def add_data(normalized_array):
         calc_angle(normalized_array, R_ANKLE, R_SHOULDER, R_WRIST),
     ]
 
-    # Concatenate the two arrays
-    # Format final : [[L0, R0], [L1, R1], ... [L8, R8]]
+    # Concatenate the two arrays. Format final : [[L0, R0], [L1, R1], ... [L8, R8]]
     paired_angles = [[r, l] for r, l in zip(right_angles, left_angles)] # Inverted because image is flipped
     # Convert to a 2D NumPy array for your ML model
     angle_array = np.array(paired_angles, dtype=np.float32)
 
     # print("Angles : ", angle_array)
     # Display only the elbow angle
-    print(angle_array[0])
+    # print(angle_array[0])
+
+
 
     # Distances
-    distance_array = [0]*2
+    # [0] = Wrist - Shoulder
+    # [1] = Ankle - Shoulder
+
+    # Left side
+    left_distances = [
+        calc_distance(normalized_array, L_WRIST, L_SHOULDER),
+        calc_distance(normalized_array, L_ANKLE, L_SHOULDER),
+    ]
+
+    # Right side
+    right_distances = [
+        calc_distance(normalized_array, R_WRIST, R_SHOULDER),
+        calc_distance(normalized_array, R_ANKLE, L_SHOULDER),
+    ]
+
+    # Concatenate the two arrays. Format final : [[L0, R0], [L1, R1], ... [L8, R8]]
+    paired_distances = [[r, l] for r, l in zip(right_distances, left_distances)]  # Inverted because image is flipped
+    # Convert to a 2D NumPy array for your ML model
+    distance_array = np.array(paired_distances, dtype=np.float32)
+
+    # Display the wrist-shoulder distance
+    print(distance_array[0])
+
+
+    # Concatenate all of the arrays
+    # First transform all of the arrays into a 1D array
+
 
 
 
