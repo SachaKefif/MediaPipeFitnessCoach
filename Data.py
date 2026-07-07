@@ -199,8 +199,8 @@ def clean_data(pose_array):
     final_array = add_data(normalized_array)
 
     # Print each cell one at a time with its index
-    print("\n\n--- Final Feature Vector ---")
-    for index, value in enumerate(final_array):
-        print(f"[{index}] : {value}")
+    # print("\n\n--- Final Feature Vector ---")
+    # for index, value in enumerate(final_array):
+    #     print(f"[{index}] : {value}")
 
     return final_array

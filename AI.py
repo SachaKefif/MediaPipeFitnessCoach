@@ -8,8 +8,7 @@ import Visualization
 # Force NumPy to print standard numbers instead of scientific notation
 np.set_printoptions(suppress=True)
 
-
-def extract_data():
+def extract_features_array():
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(
         static_image_mode=False,
@@ -51,4 +50,5 @@ def extract_data():
     cam.release()
     pose.close()
 
-extract_data()
+extract_features_array()
+
