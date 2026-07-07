@@ -11,7 +11,7 @@ import Visualization
 def record_action_with_pauses(label, frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
-    cam = cv.VideoCapture(1)
+    cam = cv.VideoCapture(0)
 
     cv.namedWindow("Recording Station")
     dataset = []
@@ -112,4 +112,4 @@ def record_action_with_pauses(label, frames=60):
 
 if __name__ == "__main__":
     # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=1, frames=60)
+    record_action_with_pauses(label=0, frames=60)
