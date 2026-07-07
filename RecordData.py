@@ -32,7 +32,7 @@ def record_action_with_pauses(label, frames=60):
             # If the label is not 0 (do nothing)
             if label != 0:
                 # Show yellow warning text
-                cv.putText(frame, f"Sample {sample_number}: GET READY...",
+                cv.putText(frame, f"Sample {sample_number}: GET READY.... {time.time() - start_time} remaining",
                            (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
                 cv.imshow("Recording Station", frame)
             else:
