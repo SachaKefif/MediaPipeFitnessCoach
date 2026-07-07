@@ -203,4 +203,4 @@ def clean_data(pose_array):
     for index, value in enumerate(final_array):
         print(f"[{index}] : {value}")
 
-    return normalized_array
+    return final_array

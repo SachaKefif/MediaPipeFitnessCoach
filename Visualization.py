@@ -5,7 +5,7 @@ import numpy as np
 # Force NumPy to print standard numbers instead of scientific notation
 np.set_printoptions(suppress=True)
 
-from Data import clean_data, CUSTOM_BODY_CONNECTIONS
+from Data import delete_coords, normalize_coords, clean_data, CUSTOM_BODY_CONNECTIONS
 
 # Body
 mp_pose = mp.solutions.pose
@@ -128,7 +128,8 @@ def extract_pose_landmarks(results, w, h):
 
 def draw_normalized_view(pose_array, normalized_view):
     # Récupère les 16 points prêts pour le ML
-    normalized_pose_array = clean_data(pose_array)
+    filtered = delete_coords(pose_array)
+    normalized_pose_array = normalize_coords(filtered)
 
     h, w, _ = normalized_view.shape
     scale = min(w, h) * 0.25
@@ -218,6 +219,11 @@ def full_display():
             # print(pose_array)
             # Print specific coordonates
             # print(pose_array[1])
+
+            # This generates the flat array with angles/distances without breaking the drawings
+            full_ml_array = clean_data(pose_array)
+            print("\nExtracted Feature Array:")
+            print(full_ml_array)
 
             drawing.draw_landmarks(
                 camera_view,
