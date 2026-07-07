@@ -8,7 +8,7 @@ from Data import clean_data
 import Visualization
 
 
-def record_action_with_pauses(label, num_samples=30, frames=60):
+def record_action_with_pauses(label, frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
     cam = cv.VideoCapture(1)
@@ -18,7 +18,9 @@ def record_action_with_pauses(label, num_samples=30, frames=60):
 
     print(f"Starting recording session for label: {label}")
 
-    for i in range(num_samples):
+    sample_number = 1
+
+    while True:
         # ---------------------------------------------------------
         # PHASE 1: PREPARATION (2 seconds)
         # ---------------------------------------------------------
@@ -28,14 +30,30 @@ def record_action_with_pauses(label, num_samples=30, frames=60):
             if not success: break
 
             # Show yellow warning text
-            cv.putText(frame, f"Sample {i + 1}/{num_samples}: GET READY...",
+            cv.putText(frame, f"Sample {sample_number}: GET READY...",
                        (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
             cv.imshow("Recording Station", frame)
 
             # Allow window to update and check for 'q' to quit early
             if cv.waitKey(1) & 0xFF == ord('q'):
+                # Clean up and Save
                 cam.release()
+                pose.close()
                 cv.destroyAllWindows()
+
+                # Save to CSV (append mode)
+                df = pd.DataFrame(dataset)
+
+                filename = f"dataset_label_{label}.csv"
+
+                df.to_csv(
+                    filename,
+                    mode="a",  # append instead of overwrite
+                    index=False,
+                    header=False
+                )
+
+                print(f"\nSuccessfully appended {sample_number - 1} samples to {filename}")
                 return
 
         # ---------------------------------------------------------
@@ -65,7 +83,7 @@ def record_action_with_pauses(label, num_samples=30, frames=60):
         flattened_window = np.array(window).flatten()
         labeled_data = np.append(flattened_window, label)
         dataset.append(labeled_data)
-        print(f"Saved sample {i + 1}/{num_samples}")
+        print(f"Saved sample {sample_number}")
 
         # ---------------------------------------------------------
         # PHASE 3: RELAX (1 second)
@@ -80,26 +98,9 @@ def record_action_with_pauses(label, num_samples=30, frames=60):
             cv.imshow("Recording Station", frame)
             cv.waitKey(1)
 
-    # Clean up and Save
-    cam.release()
-    pose.close()
-    cv.destroyAllWindows()
-
-    # Save to CSV (append mode)
-    df = pd.DataFrame(dataset)
-
-    filename = f"dataset_label_{label}.csv"
-
-    df.to_csv(
-        filename,
-        mode="a",  # append instead of overwrite
-        index=False,
-        header=False
-    )
-
-    print(f"\nSuccessfully appended {num_samples} samples to {filename}")
+        sample_number += 1
 
 
 if __name__ == "__main__":
     # Record 30 distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=1, num_samples=30)
+    record_action_with_pauses(label=0, frames=60)
