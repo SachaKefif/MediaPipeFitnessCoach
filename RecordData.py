@@ -29,10 +29,17 @@ def record_action_with_pauses(label, frames=60):
             success, frame = cam.read()
             if not success: break
 
-            # Show yellow warning text
-            cv.putText(frame, f"Sample {sample_number}: GET READY...",
-                       (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-            cv.imshow("Recording Station", frame)
+            # If the label is not 0 (do nothing)
+            if label != 0:
+                # Show yellow warning text
+                cv.putText(frame, f"Sample {sample_number}: GET READY...",
+                           (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+                cv.imshow("Recording Station", frame)
+            else:
+                # Show yellow warning text
+                cv.putText(frame, f"Sample {sample_number}: QUIT BY PRESSING Q...",
+                           (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+                cv.imshow("Recording Station", frame)
 
             # Allow window to update and check for 'q' to quit early
             if cv.waitKey(1) & 0xFF == ord('q'):
@@ -88,19 +95,21 @@ def record_action_with_pauses(label, frames=60):
         # ---------------------------------------------------------
         # PHASE 3: RELAX (1 second)
         # ---------------------------------------------------------
-        start_time = time.time()
-        while time.time() - start_time < 1.0:
-            success, frame = cam.read()
-            if not success: break
+        # Skip if the goal is to do nothing, to same time
+        if label != 0:
+            start_time = time.time()
+            while time.time() - start_time < 1.0:
+                success, frame = cam.read()
+                if not success: break
 
-            # Show green relax text
-            cv.putText(frame, "RELAX", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv.imshow("Recording Station", frame)
-            cv.waitKey(1)
+                # Show green relax text
+                cv.putText(frame, "RELAX", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv.imshow("Recording Station", frame)
+                cv.waitKey(1)
 
         sample_number += 1
 
 
 if __name__ == "__main__":
-    # Record 30 distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=0, frames=60)
+    # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
+    record_action_with_pauses(label=1, frames=60)
