@@ -1,6 +1,7 @@
 # Algorithm : XGBoost
 
 # TO_DO :
+- Velocity data onto the feature array
 - Train & Test
 
 Input :
@@ -20,7 +21,7 @@ Input :
     25, 26
     27, 28
 - Motion :
-    Difference of the Coordonates
+
 - Distances :
     Wrist - Shoulder
     Ankle - Shoulder
