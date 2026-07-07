@@ -17,7 +17,7 @@ X = df_all.iloc[:, :-1].values
 y = df_all.iloc[:, -1].values
 
 # 3. Split into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 # 4. Initialize and train XGBoost
 print("Training XGBoost...")
@@ -239,7 +239,7 @@ model.fit(X_train, y_train)
 # 5. Test accuracy
 y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
+print(f"Model Accuracy: {accuracy * 100}%")
 
 # 6. Save the model to a file so we can load it in real-time later
 model.save_model("fitness_coach_xgboost.json")

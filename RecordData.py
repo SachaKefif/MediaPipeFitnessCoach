@@ -85,11 +85,19 @@ def record_action_with_pauses(label, num_samples=30, frames=60):
     pose.close()
     cv.destroyAllWindows()
 
-    # Save to CSV
+    # Save to CSV (append mode)
     df = pd.DataFrame(dataset)
+
     filename = f"dataset_label_{label}.csv"
-    df.to_csv(filename, index=False, header=False)
-    print(f"\nSuccessfully saved {num_samples} samples to {filename}")
+
+    df.to_csv(
+        filename,
+        mode="a",  # append instead of overwrite
+        index=False,
+        header=False
+    )
+
+    print(f"\nSuccessfully appended {num_samples} samples to {filename}")
 
 
 if __name__ == "__main__":
