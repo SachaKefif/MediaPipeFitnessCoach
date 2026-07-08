@@ -159,7 +159,7 @@ def full_display():
         min_tracking_confidence=0.5,
     )
 
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(1)
 
     if not cam.isOpened():
         print("Camera not found")

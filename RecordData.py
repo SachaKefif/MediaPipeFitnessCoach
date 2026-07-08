@@ -10,7 +10,7 @@ from Data import clean_data, extract_pose_landmarks
 def record_action_with_pauses(label, frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(1)
 
     cv.namedWindow("Recording Station")
     dataset = []
@@ -21,17 +21,17 @@ def record_action_with_pauses(label, frames=60):
 
     while True:
         # ---------------------------------------------------------
-        # PHASE 1: PREPARATION (2 seconds)
+        # PHASE 1: PREPARATION (3 seconds)
         # ---------------------------------------------------------
         start_time = time.time()
-        while time.time() - start_time < 2.0:
+        while time.time() - start_time < 3.0:
             success, frame = cam.read()
             if not success: break
 
             # If the label is not 0 (do nothing)
             if label != 0:
                 # Show yellow warning text
-                cv.putText(frame, f"Sample {sample_number}: GET READY.... {time.time() - start_time} remaining",
+                cv.putText(frame, f"Sample {sample_number}: GET READY.... {(time.time() - start_time)}s remaining",
                            (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
                 cv.imshow("Recording Station", frame)
             else:
@@ -74,6 +74,23 @@ def record_action_with_pauses(label, frames=60):
             rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
             body_detected = pose.process(rgb_frame)
 
+            # Draw the pose landmarks on the recording frame
+            if body_detected.pose_landmarks:
+                mp.solutions.drawing_utils.draw_landmarks(
+                    frame,
+                    body_detected.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
+                        color=(0, 0, 255),  # Red joints
+                        thickness=3,
+                        circle_radius=3
+                    ),
+                    connection_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
+                        color=(255, 255, 255),  # White bones
+                        thickness=2
+                    )
+                )
+
             # Show red recording text
             cv.putText(frame, f"RECORDING: {len(window)}/{frames}",
                        (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
@@ -92,12 +109,12 @@ def record_action_with_pauses(label, frames=60):
         print(f"Saved sample {sample_number}")
 
         # ---------------------------------------------------------
-        # PHASE 3: RELAX (1 second)
+        # PHASE 3: RELAX (3 second)
         # ---------------------------------------------------------
         # Skip if the goal is to do nothing, to same time
         if label != 0:
             start_time = time.time()
-            while time.time() - start_time < 1.0:
+            while time.time() - start_time < 3.0:
                 success, frame = cam.read()
                 if not success: break
 
@@ -111,4 +128,4 @@ def record_action_with_pauses(label, frames=60):
 
 if __name__ == "__main__":
     # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=0, frames=60)
+    record_action_with_pauses(label=1, frames=60)
