@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
 
 # 1. Load the recorded data
 df_0 = pd.read_csv("dataset_label_0.csv", header=None)
@@ -16,8 +16,22 @@ df_all = pd.concat([df_0, df_1], ignore_index=True)
 X = df_all.iloc[:, :-1].values
 y = df_all.iloc[:, -1].values
 
-# 3. Split into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
+# 3. Split into training, validation, and testing sets
+# 70% training
+# 15% validation  <- used during training
+# 15% testing    <- final evaluation
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X,
+    y,
+    test_size=0.3,
+    random_state=5
+)
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp,
+    y_temp,
+    test_size=0.5,
+    random_state=5
+)
 
 # 4. Initialize and train XGBoost
 print("Training XGBoost...")
@@ -41,16 +55,16 @@ model = xgb.XGBClassifier(
                                       # "cpu" for processor
                                       # "cuda" for NVIDIA GPU
 
-    tree_method="auto",               # Algorithm used to build trees.
+    tree_method="hist",               # Algorithm used to build trees.
                                       # "auto" lets XGBoost choose.
                                       # Other options:
                                       # "hist", "approx", "exact"
 
-    n_estimators=1000,                # Number of trees to build.
+    n_estimators=5000,                # Number of trees to build.
                                       # More trees usually increase accuracy
                                       # but also training time.
 
-    learning_rate=0.01,                # How much each tree corrects the previous ones.
+    learning_rate=0.005,                # How much each tree corrects the previous ones.
                                       # Lower values learn slower but usually generalize better.
                                       # Common values:
                                       # 0.3, 0.1, 0.05, 0.01
@@ -73,15 +87,15 @@ model = xgb.XGBClassifier(
     # TREE COMPLEXITY
     # =========================
 
-    max_depth=6,                      # Maximum depth of every tree.
+    max_depth=3,                      # Maximum depth of every tree.
                                       # Higher values allow more complex trees
                                       # but increase overfitting.
 
-    min_child_weight=1,               # Minimum "weight" required before creating
+    min_child_weight=10,               # Minimum "weight" required before creating
                                       # another split.
                                       # Larger values make the tree simpler.
 
-    gamma=0,                          # Minimum improvement required before
+    gamma=5,                          # Minimum improvement required before
                                       # making a split.
                                       # Larger values create fewer branches.
 
@@ -99,14 +113,14 @@ model = xgb.XGBClassifier(
     # DATA SAMPLING
     # =========================
 
-    subsample=1.0,                    # Fraction of training samples used
+    subsample=0.8,                    # Fraction of training samples used
                                       # for each tree.
                                       # 0.8 means every tree sees 80% of the data.
 
     sampling_method="uniform",        # How rows are sampled.
                                       # Usually leave as "uniform".
 
-    colsample_bytree=1.0,             # Fraction of features used
+    colsample_bytree=0.8,             # Fraction of features used
                                       # when creating each tree.
 
     colsample_bylevel=1.0,            # Fraction of features used
@@ -119,11 +133,11 @@ model = xgb.XGBClassifier(
     # REGULARIZATION
     # =========================
 
-    reg_alpha=0.0,                    # L1 regularization.
+    reg_alpha=1.0,                    # L1 regularization.
                                       # Encourages simpler models.
                                       # Higher values reduce overfitting.
 
-    reg_lambda=1.0,                   # L2 regularization.
+    reg_lambda=10,                   # L2 regularization.
                                       # Penalizes very large weights.
                                       # Also helps reduce overfitting.
 
@@ -208,7 +222,7 @@ model = xgb.XGBClassifier(
     # EVALUATION
     # =========================
 
-    eval_metric=None,                 # Metric used during training.
+    eval_metric="aucpr",                 # Metric used during training.
                                       # Examples:
                                       # "logloss"
                                       # "auc"
@@ -234,12 +248,47 @@ model = xgb.XGBClassifier(
                                       # the underlying XGBoost library.
 )
 
-model.fit(X_train, y_train)
+model.fit(
+    X_train,
+    y_train,
+    eval_set=[(X_test,y_test)],
+    verbose=True
+)
 
-# 5. Test accuracy
-y_pred = model.predict(X_test)
+# 5. Test metrics
+y_prob = model.predict_proba(X_test)[:,1]
+threshold = 0.39   # make it harder to predict 1 because we want no false positive
+y_pred = (y_prob >= threshold).astype(int)
+
+# from sklearn.model_selection import cross_val_score
+#
+# scores = cross_val_score(
+#     model,
+#     X,
+#     y,
+#     cv=5,
+#     scoring="precision"
+# )
+#
+# print(scores)
+# print("Average precision:", scores.mean())
+
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy * 100}%")
+
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print("[TN FP]"
+      "[FN TP]")
+print(cm)
+
+precision = precision_score(y_test, y_pred)
+print("Precision:", precision)
+
+recall = recall_score(y_test, y_pred)
+print("Recall:", recall)
+
+
 
 # 6. Save the model to a file so we can load it in real-time later
 model.save_model("fitness_coach_xgboost.json")
