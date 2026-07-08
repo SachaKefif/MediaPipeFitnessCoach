@@ -5,7 +5,7 @@ import numpy as np
 # Force NumPy to print standard numbers instead of scientific notation
 np.set_printoptions(suppress=True)
 
-from Data import delete_coords, normalize_coords, clean_data, CUSTOM_BODY_CONNECTIONS
+import Data
 
 # Body
 mp_pose = mp.solutions.pose
@@ -115,21 +115,10 @@ def draw_hand_to_hand_connection(hand1, hand2, image, color=color_custom_connect
         cv.line(image, point(hand1, a), point(hand2, b), color, thickness)
 
 
-def extract_pose_landmarks(results, w, h):
-    coords = []
-
-    if results.pose_landmarks:
-        for lm in results.pose_landmarks.landmark:
-            # Multiply by width and height to restore a perfect mathematical grid
-            coords.append([lm.x * w, lm.y * h, lm.z * w])
-
-    return np.array(coords, dtype=np.float32)
-
-
 def draw_normalized_view(pose_array, normalized_view):
     # Récupère les 16 points prêts pour le ML
-    filtered = delete_coords(pose_array)
-    normalized_pose_array = normalize_coords(filtered)
+    filtered = Data.delete_coords(pose_array)
+    normalized_pose_array = Data.normalize_coords(filtered)
 
     h, w, _ = normalized_view.shape
     scale = min(w, h) * 0.25
@@ -143,7 +132,7 @@ def draw_normalized_view(pose_array, normalized_view):
         cv.circle(normalized_view, (x, y), 5, (0, 255, 0), -1)
 
     # Dessiner les connexions avec la carte personnalisée
-    for a, b in CUSTOM_BODY_CONNECTIONS:
+    for a, b in Data.CUSTOM_BODY_CONNECTIONS:
         x1 = int(normalized_pose_array[a][0] * scale + offset_x)
         y1 = int(normalized_pose_array[a][1] * scale + offset_y)
 
@@ -170,7 +159,7 @@ def full_display():
         min_tracking_confidence=0.5,
     )
 
-    cam = cv.VideoCapture(1)
+    cam = cv.VideoCapture(0)
 
     if not cam.isOpened():
         print("Camera not found")
@@ -213,7 +202,7 @@ def full_display():
         # If body is detected, draw landmarks and connections on the frame
         if body_detected.pose_landmarks:
             # Extract the coordonates
-            pose_array = extract_pose_landmarks(body_detected, w, h)
+            pose_array = Data.extract_pose_landmarks(body_detected, w, h)
 
             # Print the coordonates
             # print(pose_array)
@@ -221,7 +210,7 @@ def full_display():
             # print(pose_array[1])
 
             # This generates the flat array with angles/distances without breaking the drawings
-            full_ml_array = clean_data(pose_array)
+            full_ml_array = Data.clean_data(pose_array)
             print("\nExtracted Feature Array:")
             print(full_ml_array)
 

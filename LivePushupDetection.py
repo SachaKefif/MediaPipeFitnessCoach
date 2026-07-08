@@ -3,9 +3,7 @@ import mediapipe as mp
 import numpy as np
 import xgboost as xgb
 from collections import deque
-from Data import clean_data
-from Visualization import extract_pose_landmarks
-
+from Data import clean_data, extract_pose_landmarks
 
 def live_detection(frames=60):
     # 1. Load the trained XGBoost model

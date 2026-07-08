@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 import time
 from collections import deque
-from Data import clean_data
-import Visualization
+from Data import clean_data, extract_pose_landmarks
 
 
 def record_action_with_pauses(label, frames=60):
@@ -82,7 +81,7 @@ def record_action_with_pauses(label, frames=60):
             cv.waitKey(1)
 
             if body_detected.pose_landmarks:
-                pose_array = Visualization.extract_pose_landmarks(body_detected, w, h)
+                pose_array = extract_pose_landmarks(body_detected, w, h)
                 features = clean_data(pose_array)
                 window.append(features)
 

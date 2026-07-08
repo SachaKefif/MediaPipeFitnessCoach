@@ -2,7 +2,6 @@ import cv2 as cv
 import mediapipe as mp
 import numpy as np
 
-import Visualization
 # Force NumPy to print standard numbers instead of scientific notation
 np.set_printoptions(suppress=True)
 
@@ -26,6 +25,16 @@ CUSTOM_BODY_CONNECTIONS = [
     (L_HIP, L_KNEE), (L_KNEE, L_ANKLE), (L_ANKLE, L_FOOT), # Jambe gauche
     (R_HIP, R_KNEE), (R_KNEE, R_ANKLE), (R_ANKLE, R_FOOT)  # Jambe droite
 ]
+
+def extract_pose_landmarks(results, w, h):
+    coords = []
+
+    if results.pose_landmarks:
+        for lm in results.pose_landmarks.landmark:
+            # Multiply by width and height to restore a perfect mathematical grid
+            coords.append([lm.x * w, lm.y * h, lm.z * w])
+
+    return np.array(coords, dtype=np.float32)
 
 def delete_coords(pose_array):
     keep = [False] * 33
@@ -237,7 +246,7 @@ def extract_features_array():
 
         if body_detected.pose_landmarks:
             # 1. You get the pose_array here
-            pose_array = Visualization.extract_pose_landmarks(body_detected, w, h)
+            pose_array = extract_pose_landmarks(body_detected, w, h)
 
             # 2. Immediately pass it to clean_data()
             final_features = clean_data(pose_array)
