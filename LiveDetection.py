@@ -17,9 +17,10 @@ def live_detection(frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
     drawing = mp.solutions.drawing_utils
-    cam = cv.VideoCapture(1)
+    cam = cv.VideoCapture(0)
 
     cv.namedWindow("Live Detector", cv.WINDOW_NORMAL)
+    cv.resizeWindow("Live Detector", 1440, 810)
 
     # 3. Create the sliding window (conveyor belt)
     window = deque(maxlen=frames)
@@ -88,7 +89,8 @@ def live_detection(frames=60):
                        cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 165, 255), 3)
 
         # Show the camera feed
-        cv.imshow("Live Pushup Detector", frame)
+        display_frame = cv.resize(frame, (1440, 810))
+        cv.imshow("Live Detector", display_frame)
 
         # Quit if 'q' is pressed
         if cv.waitKey(1) & 0xFF == ord('q'):

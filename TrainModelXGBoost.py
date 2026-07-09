@@ -7,9 +7,10 @@ from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, r
 # 1. Load the recorded data
 df_0 = pd.read_csv("dataset_label_0.csv", header=None)
 df_1 = pd.read_csv("dataset_label_1.csv", header=None)
+df_2 = pd.read_csv("dataset_label_2.csv", header=None)
 
 # Merge datasets
-df_all = pd.concat([df_0, df_1], ignore_index=True)
+df_all = pd.concat([df_0, df_1, df_2], ignore_index=True)
 
 # 2. Split into features (X) and labels (y)
 # The label is the last column
@@ -42,9 +43,11 @@ model = xgb.XGBClassifier(
     # GENERAL PARAMETERS
     # =========================
 
-    objective="binary:logistic",      # The task the model is solving.
+    objective="multi:softprob",      # The task the model is solving.
                                       # "binary:logistic" = binary classification (0/1).
                                       # Outputs a probability between 0 and 1.
+
+    num_class=3,
 
     booster="gbtree",                 # Type of model.
                                       # "gbtree"  -> decision trees (almost always used)
@@ -256,37 +259,23 @@ model.fit(
 )
 
 # 5. Test metrics
-y_prob = model.predict_proba(X_test)[:,1]
-threshold = 0.39   # make it harder to predict 1 because we want no false positive
-y_pred = (y_prob >= threshold).astype(int)
-
-# from sklearn.model_selection import cross_val_score
-#
-# scores = cross_val_score(
-#     model,
-#     X,
-#     y,
-#     cv=5,
-#     scoring="precision"
-# )
-#
-# print(scores)
-# print("Average precision:", scores.mean())
+# model.predict automatically picks the class with the highest probability
+y_pred = model.predict(X_test)
 
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy * 100}%")
 
 cm = confusion_matrix(y_test, y_pred)
 print("Confusion Matrix:")
-print("[TN FP]"
-      "[FN TP]")
 print(cm)
 
-precision = precision_score(y_test, y_pred)
-print("Precision:", precision)
+# For multi-class, you must specify an 'average' method
+# 'macro' calculates metrics for each label, and finds their unweighted mean.
+precision = precision_score(y_test, y_pred, average='macro')
+print("Macro Precision:", precision)
 
-recall = recall_score(y_test, y_pred)
-print("Recall:", recall)
+recall = recall_score(y_test, y_pred, average='macro')
+print("Macro Recall:", recall)
 
 
 
