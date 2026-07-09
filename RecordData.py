@@ -128,4 +128,4 @@ def record_action_with_pauses(label, frames=60):
 
 if __name__ == "__main__":
     # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=1, frames=60)
+    record_action_with_pauses(label=0, frames=60)
