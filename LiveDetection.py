@@ -5,6 +5,7 @@ import xgboost as xgb
 from collections import deque
 from Data import clean_data, extract_pose_landmarks
 
+
 def live_detection(frames=60):
     # 1. Load the trained XGBoost model
     print("Loading XGBoost model...")
@@ -18,7 +19,7 @@ def live_detection(frames=60):
     drawing = mp.solutions.drawing_utils
     cam = cv.VideoCapture(1)
 
-    cv.namedWindow("Live Pushup Detector", cv.WINDOW_NORMAL)
+    cv.namedWindow("Live Detector", cv.WINDOW_NORMAL)
 
     # 3. Create the sliding window (conveyor belt)
     window = deque(maxlen=frames)
@@ -65,11 +66,15 @@ def live_detection(frames=60):
                 # 5. Display the result on the screen
                 if prediction == 1:
                     # Doing a pushup! (Green text)
-                    status_text = f"ACTION: PUSHUP! ({probability * 100:.1f}%)"
+                    status_text = f"PUSHUP : ({probability * 100:.1f}%)"
+                    color = (0, 255, 0)
+                elif prediction == 2:
+                    # Doing a squat! (Green text)
+                    status_text = f"SQUAT : ({probability * 100:.1f}%)"
                     color = (0, 255, 0)
                 else:
                     # Idle / Not doing a pushup (Red text)
-                    status_text = f"ACTION: IDLE ({probability * 100:.1f}%)"
+                    status_text = f"IDLE : ({probability * 100:.1f}%)"
                     color = (0, 0, 255)
 
                 cv.putText(frame, status_text, (30, 50),
@@ -77,7 +82,7 @@ def live_detection(frames=60):
 
         else:
             # If no body is detected, clear the window so it doesn't
-            # accidentally merge old frames with new frames when you walk back in
+            # accidentally merge old frames with new frames when walking back in
             window.clear()
             cv.putText(frame, "NO BODY DETECTED", (30, 50),
                        cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 165, 255), 3)
@@ -95,5 +100,4 @@ def live_detection(frames=60):
 
 
 if __name__ == "__main__":
-    # Make sure 'frames' matches EXACTLY what you recorded with (60)
     live_detection(frames=60)
