@@ -1,8 +1,7 @@
 # Algorithm : XGBoost
 
 # TO_DO :
-- Velocity data onto the feature array
-- Train & Test
+- App
 
 Input :
 - Angles :
@@ -20,64 +19,7 @@ Input :
     23, 24
     25, 26
     27, 28
-- Motion :
 
 - Distances :
     Wrist - Shoulder
     Ankle - Shoulder
-
-Output :
-    True
-    False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from collections import deque
-import numpy as np
-
-# Create an empty window that holds a maximum of 30 items
-window = deque(maxlen=30)
-
-# ... inside your camera loop ...
-final_features = clean_data(pose_array)
-window.append(final_features)
-
-# Only predict if we have exactly 30 frames
-if len(window) == 30:
-    # Convert the list of 30 arrays into one giant flat array
-    xgb_input = np.array(window).flatten()
-    # xgb_input is now ready for XGBoost!
-
-
-
-
-
-
-
-
-
