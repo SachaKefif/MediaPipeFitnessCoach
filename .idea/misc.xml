@@ -3,6 +3,12 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.10 (MediaPipeFitnessCoach)" />
   </component>
-  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MaterialThemeProjectNewConfig">
+    <option name="metadata">
+      <MTProjectMetadataState>
+        <option name="userId" value="-5e84d914:19c43f23171:-7ffd" />
+      </MTProjectMetadataState>
+    </option>
+  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (MediaPipeFitnessCoach)" project-jdk-type="Python SDK" />
 </project>

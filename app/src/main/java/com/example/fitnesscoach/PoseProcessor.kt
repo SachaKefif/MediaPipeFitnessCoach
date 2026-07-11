@@ -30,9 +30,9 @@ class PoseProcessor {
 
     fun cleanData(result: PoseLandmarkerResult, width: Int, height: Int): FloatArray? {
         if (result.landmarks().isEmpty()) return null
-        
+
         val landmarks = result.landmarks()[0]
-        
+
         // 1. Extract and restore grid (equivalent to extract_pose_landmarks)
         val poseArray = Array(16) { FloatArray(3) }
         for (i in KEEP_INDICES.indices) {
@@ -49,7 +49,7 @@ class PoseProcessor {
         var torsoLength = 0f
         for (i in 0..2) torsoLength += (shoulderCenter[i] - hipCenter[i]).pow(2)
         torsoLength = sqrt(torsoLength)
-        
+
         if (torsoLength < 1e-6) torsoLength = 1.0f
 
         val normalizedArray = Array(16) { i ->
@@ -98,7 +98,7 @@ class PoseProcessor {
         // Result vector: flat coords (48) + paired angles (18) + paired distances (4) = 70
         val finalArray = FloatArray(70)
         var idx = 0
-        
+
         // Flat coords
         for (i in 0..15) {
             for (j in 0..2) {
