@@ -8,9 +8,15 @@ from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, r
 df_0 = pd.read_csv("dataset_label_0.csv", header=None)
 df_1 = pd.read_csv("dataset_label_1.csv", header=None)
 df_2 = pd.read_csv("dataset_label_2.csv", header=None)
+print(f"Size of dataset label 0 : {len(df_0)}")
+print(f"Size of dataset label 1 : {len(df_1)}")
+print(f"Size of dataset label 2 : {len(df_2)}")
 
 # Merge datasets
 df_all = pd.concat([df_0, df_1, df_2], ignore_index=True)
+
+# Print the number of rows in the entire dataset
+print(f"The complete file contains {len(df_all)} rows")
 
 # 2. Split into features (X) and labels (y)
 # The label is the last column

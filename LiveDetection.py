@@ -17,7 +17,7 @@ def live_detection(frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
     drawing = mp.solutions.drawing_utils
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(1)
 
     cv.namedWindow("Live Detector", cv.WINDOW_NORMAL)
     cv.resizeWindow("Live Detector", 1440, 810)
