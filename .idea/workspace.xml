@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f234f80b-bb81-4d53-b26d-fa5a44f7bdad" name="Changes" comment="fix: the beep when we detect a label now plays once, and wait for a label 0 to appear, to reset" />
+    <list default="true" id="f234f80b-bb81-4d53-b26d-fa5a44f7bdad" name="Changes" comment="fix: the beep when we detect a label now plays once, and wait for a label 0 to appear, to reset">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RecordData.py" beforeDir="false" afterPath="$PROJECT_DIR$/RecordData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset_label_2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/dataset_label_2.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fitness_coach_lstm.keras" beforeDir="false" afterPath="$PROJECT_DIR$/fitness_coach_lstm.keras" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -106,7 +111,7 @@
       <workItem from="1783959220925" duration="1492000" />
       <workItem from="1784045940819" duration="54000" />
       <workItem from="1784046002159" duration="4214000" />
-      <workItem from="1784630801173" duration="4797000" />
+      <workItem from="1784630801173" duration="6969000" />
     </task>
     <task id="LOCAL-00001" summary="feat: added a NN algorithm from tensorflow&#10;refractor: created the dataset for label 3">
       <option name="closed" value="true" />
@@ -193,10 +198,10 @@
     <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$Data.coverage" NAME="Data Coverage Results" MODIFIED="1783797792227" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$TrainModel.coverage" NAME="TrainModel Coverage Results" MODIFIED="1783798842906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$Visualization.coverage" NAME="Visualization Coverage Results" MODIFIED="1784048387769" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$LiveDetection.coverage" NAME="LiveDetection Coverage Results" MODIFIED="1784635382762" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$LiveDetection.coverage" NAME="LiveDetection Coverage Results" MODIFIED="1784643620683" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$TrainModelXGBoost.coverage" NAME="TrainModelXGBoost Coverage Results" MODIFIED="1784049956120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$TrainModelNN.coverage" NAME="TrainModelNN Coverage Results" MODIFIED="1784634716734" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$TrainModelNN.coverage" NAME="TrainModelNN Coverage Results" MODIFIED="1784642820448" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$CameraScanner.coverage" NAME="CameraScanner Coverage Results" MODIFIED="1784631870653" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$RecordData.coverage" NAME="RecordData Coverage Results" MODIFIED="1784634152106" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/MediaPipeFitnessCoach$RecordData.coverage" NAME="RecordData Coverage Results" MODIFIED="1784644073847" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

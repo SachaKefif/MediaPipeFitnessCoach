@@ -126,7 +126,7 @@ def record_action_with_pauses(label, frames=60):
         # PHASE 3: RELAX (3 second)
         # ---------------------------------------------------------
         # Skip if the goal is to do nothing, to same time
-        if label != 0 and label != 3:
+        if label == 1:
             start_time = time.time()
             while time.time() - start_time < 3.0:
                 success, frame = cam.read()
@@ -143,4 +143,4 @@ def record_action_with_pauses(label, frames=60):
 
 if __name__ == "__main__":
     # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=0, frames=60)
+    record_action_with_pauses(label=2, frames=60)
