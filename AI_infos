@@ -1,6 +1,7 @@
-# 0 = Nothing
-# 1 = Pushup
-# 2 = Squat
+# 0 = Nothing (266/500)
+# 1 = Pushup (100 front, 50 left, 25 right)
+# 2 = Squat (100 front, 50 left, 25 right)
+# 3 = core crunch (45 left arms back, 45 left arms front, 45 right arms back, 45 right arms front)
 
 # TO_DO :
 - App

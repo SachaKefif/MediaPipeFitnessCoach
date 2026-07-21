@@ -3,9 +3,13 @@ import mediapipe as mp
 import numpy as np
 import xgboost as xgb
 import tensorflow as tf
+import winsound
 from collections import deque
 from Data import clean_data, extract_pose_landmarks
 
+def play_detected_cue():
+    # Plays a lower-pitched beep (500 Hz for 300 ms)
+    winsound.Beep(1750, 300)
 
 def live_detection(frames=60):
     # 1. Load the trained model
@@ -23,7 +27,15 @@ def live_detection(frames=60):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
     drawing = mp.solutions.drawing_utils
-    cam = cv.VideoCapture(1)
+
+    # phone_ip = "192.168.1.27"
+    # cam = cv.VideoCapture(f"http://{phone_ip}:4747/video")
+    cam = cv.VideoCapture(0)
+
+    print("Camera Opened:", cam.isOpened())
+    if not cam.isOpened():
+        print("Failed to open camera")
+        return
 
     cv.namedWindow("Live Detector", cv.WINDOW_NORMAL)
     cv.resizeWindow("Live Detector", 1440, 810)
@@ -31,10 +43,13 @@ def live_detection(frames=60):
     # 3. Create the sliding window (conveyor belt)
     window = deque(maxlen=frames)
 
-    # Variables to count exercice repetitions
+    # Variables to count exercise repetitions
     tot_pushup = 0
     tot_squat = 0
     tot_crunch = 0
+
+    # Prevent multiple detections of the same repetition
+    ready_for_new_rep = True
 
     print("Starting live detection. Press 'q' to quit.")
 
@@ -42,6 +57,9 @@ def live_detection(frames=60):
         success, frame = cam.read()
         if not success:
             break
+
+        # Flip the frame
+        frame = cv.flip(frame, 1)
 
         h, w, _ = frame.shape
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -88,27 +106,52 @@ def live_detection(frames=60):
                 # Grab that specific confidence percentage
                 probability = all_probabilities[prediction]
 
-
                 # 5. Display the result on the screen
-                if prediction == 1:
-                    # Doing a pushup! (Green text)
-                    tot_pushup += 1
-                    status_text = f"Label {prediction} | PUSHUP : ({probability * 100:.1f}% | Total : {tot_pushup})"
-                    color = (0, 255, 0)
-                elif prediction == 2:
-                    # Doing a squat! (Green text)
-                    tot_squat += 1
-                    status_text = f"Label {prediction} | SQUAT : ({probability * 100:.1f}% | Total : {tot_squat})"
-                    color = (0, 255, 0)
-                elif prediction == 3:
-                    # Doing a crunch! (Green text)
-                    tot_crunch += 1
-                    status_text = f"Label {prediction} | CRUNCH : ({probability * 100:.1f}% | Total : {tot_crunch})"
-                    color = (0, 255, 0)
-                else:
-                    # Idle / Not doing a pushup (Red text)
-                    status_text = f"Label {prediction} | IDLE : ({probability * 100:.1f}%)"
+                # Default display
+                status_text = f"Label {prediction}"
+                color = (0, 255, 0)
+
+                # -----------------------------
+                # IDLE
+                # -----------------------------
+                if prediction == 0:
+                    ready_for_new_rep = True
+
+                    status_text = f"IDLE ({probability * 100:.1f}%)"
                     color = (0, 0, 255)
+
+                # -----------------------------
+                # PUSHUP
+                # -----------------------------
+                elif prediction == 1:
+                    status_text = f"PUSHUP ({probability * 100:.1f}%) | Total: {tot_pushup}"
+
+                    if ready_for_new_rep:
+                        play_detected_cue()
+                        tot_pushup += 1
+                        ready_for_new_rep = False
+
+                # -----------------------------
+                # SQUAT
+                # -----------------------------
+                elif prediction == 2:
+                    status_text = f"SQUAT ({probability * 100:.1f}%) | Total: {tot_squat}"
+
+                    if ready_for_new_rep:
+                        play_detected_cue()
+                        tot_squat += 1
+                        ready_for_new_rep = False
+
+                # -----------------------------
+                # CRUNCH
+                # -----------------------------
+                elif prediction == 3:
+                    status_text = f"CRUNCH ({probability * 100:.1f}%) | Total: {tot_crunch}"
+
+                    if ready_for_new_rep:
+                        play_detected_cue()
+                        tot_crunch += 1
+                        ready_for_new_rep = False
 
                 cv.putText(frame, status_text, (30, 50),
                            cv.FONT_HERSHEY_SIMPLEX, 1.2, color, 3)

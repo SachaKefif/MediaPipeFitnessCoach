@@ -4,3 +4,10 @@ __pycache__/
 .env
 .venv/
 venv/
+*.hprof
+
+*.apk
+
+/build/
+
+/app/build/
