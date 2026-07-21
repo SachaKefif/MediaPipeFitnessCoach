@@ -57,13 +57,37 @@ model.compile(
 )
 
 # 6. Train the model
-model.fit(
+class_weights = {
+    0: 2.5,  # Makes missing Class 0 hurt more in the loss function, because we want less FN (missed "0")
+    1: 1.0,
+    2: 1.0,
+    3: 1.0
+}
+
+history = model.fit(
     X_train, y_train,
-    epochs=150,  # Number of full passes over the data
+    epochs=500,  # Number of full passes over the data
     batch_size=32,  # How many samples processed at once
+    class_weight=class_weights, # penality
     validation_split=0.2,  # Uses 20% of training data to validate per epoch
     verbose=1
 )
+
+# 6bis. Plot and save accuracy evolution graph
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10, 6))
+plt.plot(history.history['accuracy'], label='Training Accuracy', linewidth=2)
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy', linewidth=2)
+plt.title('Model Accuracy Evolution Over Epochs', fontsize=14)
+plt.xlabel('Epochs', fontsize=12)
+plt.ylabel('Accuracy', fontsize=12)
+plt.legend(loc='lower right', fontsize=11)
+plt.grid(True, linestyle='--', alpha=0.6)
+# Save image file
+plot_filename = "accuracy_evolution.png"
+plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"\nAccuracy plot successfully saved as '{plot_filename}'")
 
 # 7. Test metrics
 print("\nEvaluating model...")

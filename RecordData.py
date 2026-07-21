@@ -29,10 +29,10 @@ def record_action_with_pauses(label, frames=60):
 
     while True:
         # ---------------------------------------------------------
-        # PHASE 1: PREPARATION (3 seconds)
+        # PHASE 1: PREPARATION
         # ---------------------------------------------------------
         start_time = time.time()
-        while time.time() - start_time < 2.0:
+        while time.time() - start_time < 0.5:
             success, frame = cam.read()
             # Flip camera
             frame = cv.flip(frame, 1)
@@ -143,4 +143,4 @@ def record_action_with_pauses(label, frames=60):
 
 if __name__ == "__main__":
     # Record X distinct samples. Change label to 0, 1, 2 etc. for different moves.
-    record_action_with_pauses(label=2, frames=60)
+    record_action_with_pauses(label=0, frames=60)
